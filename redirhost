@@ -1,0 +1,18 @@
+# ============================
+# Jet 專用 redir-host DNS 防洩漏修正版
+# ============================
+
+# 1. 放行本地 DNS（非常重要）
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p udp --dport 53 -j ACCEPT
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p tcp --dport 53 -j ACCEPT
+
+iptables -t nat -A PREROUTING -s 127.0.0.1/32 -p udp --dport 53 -j ACCEPT
+iptables -t nat -A PREROUTING -s 127.0.0.1/32 -p tcp --dport 53 -j ACCEPT
+
+# 2. 劫持外部 DNS（防止洩漏）
+iptables -t nat -A PREROUTING ! -s 192.168.0.0/16 -p udp --dport 53 -j REDIRECT --to-port 7874
+iptables -t nat -A PREROUTING ! -s 192.168.0.0/16 -p tcp --dport 53 -j REDIRECT --to-port 7874
+
+# 3. 保留 Clash 自己的 DNS
+iptables -t nat -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -t nat -A OUTPUT -p tcp --dport 53 -j ACCEPT
